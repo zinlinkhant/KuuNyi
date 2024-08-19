@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
@@ -9,14 +9,24 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // Example method to create a new user
-  async createUser(name: string, email: string, password: string): Promise<User> {
-    const newUser = this.userRepository.create({ name, email, password });
-    return this.userRepository.save(newUser);
+  async findOne(username: string): Promise<any> {
+    return this.userRepository.find({ where: { name:username } });
   }
 
-  // Example method to find all users
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async create(username: string, password: string): Promise<any> {
+    const newUser = { userId: Date.now(), username, password };
+    this.userRepository.save(newUser);
+    return newUser;
+  }
+   async findOneWithEmail(email: string) {
+    return this.userRepository.findOne({
+      where: {
+        email,
+      },
+    });
+  }
+    async hasEmail(email: string) {
+    const hasEmail = await this.findOneWithEmail(email);
+    if (hasEmail) throw new ConflictException('Email has exist');
   }
 }
